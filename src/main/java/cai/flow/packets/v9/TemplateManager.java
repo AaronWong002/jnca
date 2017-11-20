@@ -13,17 +13,24 @@ public class TemplateManager {
 
     private static String v5FileName = "127.0.0.0_32.properties";
     static {
+        System.out.println("TemplateManager-static:1");
         try {
             Class.forName("cai.flow.collector.Collector");
+            System.out.println("TemplateManager-static:2");
         } catch (Exception ex) {
+            System.out.println("TemplateManager-static:3");
             ex.printStackTrace();
         }
     }
 
     private TemplateManager() {
+        System.out.println("TemplateManager-TemplateManager():1");
         try {
+            System.out.println("TemplateManager-TemplateManager():v5FileName="+v5FileName);
             v5Template = new Template(v5FileName);
+            System.out.println("TemplateManager-TemplateManager():v5Template="+v5Template.getRouterIp());
             int samRate = resources.integer(v5Template.getRouterIp());
+            System.out.println("TemplateManager-TemplateManager():samRate="+samRate);
             if (samRate != 0) {
                 v5Template.setSamplingRate(samRate);
             }
@@ -31,6 +38,7 @@ public class TemplateManager {
             e1.printStackTrace();
         }
         // 从网络中直接得到template，不从外存取
+        System.out.println("TemplateManager-TemplateManager():cai.utils.Params.template_refreshFromHD="+cai.utils.Params.template_refreshFromHD);
         if (cai.utils.Params.template_refreshFromHD) {
             File tpPath = new File(Template.templatePath);
             if (tpPath.exists() && tpPath.isDirectory()) {

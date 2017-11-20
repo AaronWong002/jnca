@@ -37,7 +37,6 @@ public class Receive {
             String ip = dp.getAddress().getHostAddress();
 
             int port = dp.getPort();
-            dp.g
             System.out.println("二进制流量："+dp.getData());
             for (byte b:dp.getData()) {
                 System.out.println(b);

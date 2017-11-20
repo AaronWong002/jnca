@@ -223,6 +223,7 @@ class Collector {
 		/**
 		 * 最高优先级，读UDP包线程
 		 */
+		System.out.println("Collector-go:1 localHost="+localHost+";localPort="+localPort);
 		ServiceThread rdr = new ServiceThread(this, syslog, "Reader at "
 				+ (localHost == null ? "any" : "" + localHost) + ":"
 				+ localPort, "Reader") {
@@ -238,6 +239,8 @@ class Collector {
 		/**
 		 * 统计线程仅仅做统计和log
 		 */
+		System.out.println("Collector-go:2 stat_interval="+stat_interval);
+
 		if (stat_interval != 0 && syslog.need(Syslog.LOG_NOTICE)) {
 			statistics = new ServiceThread(this, syslog, "Statistics over "
 					+ Util.toInterval(stat_interval), "Statistics") {
@@ -251,6 +254,7 @@ class Collector {
 		}
 
 		ServiceThread[] cols = new ServiceThread[collector_thread];
+		System.out.println("Collector-go:3 stat_interval="+collector_thread);
 
 		for (int i = 0; i < collector_thread; i++) {
 			String title = new String("Collector #" + (i + 1));
@@ -317,6 +321,7 @@ class Collector {
 
 		try {
 			try {
+				System.out.println("Collector-reader_loop:localHost:"+localHost+";localPort:"+localPort+";bufferSize:"+receiveBufferSize);
 				socket = new DatagramSocket(localPort, localHost);
 				socket.setReceiveBufferSize(receiveBufferSize);
 			} catch (IOException exc) {
@@ -327,6 +332,7 @@ class Collector {
 			}
 
 			while (true) {
+				System.out.println("Collector-reader_loop:while circle receive a packet");
 				byte[] buf = new byte[2048];// 效率在这个地方可以提高
 				DatagramPacket p = null;
 				// 仅仅做实验
@@ -335,6 +341,8 @@ class Collector {
 				// p = tmpPacket;
 				// }
 				// 仅仅做实验
+				System.out.println("Collector-reader_loop:while circle receive a packet p="+p);
+
 				if (p == null) {
 					p = new DatagramPacket(buf, buf.length);
 
@@ -357,6 +365,7 @@ class Collector {
 				// Thread.sleep(1000);
 				// 仅仅做实验
 				if (this.sampler.shouldDue()) {
+					System.out.println("Collector-reader_loop:while circle before put to queue");
 					put_to_queue(p);
 				}
 				p = null;
@@ -377,8 +386,10 @@ class Collector {
 	 */
 	void put_to_queue(final DatagramPacket p) {
 		InetAddress router = p.getAddress();
-		InetAddress group = (InetAddress) routers.get(router);
 
+		InetAddress group = (InetAddress) routers.get(router);
+		System.out.println("Collector put_to_queue:router="+router.getHostAddress());
+		System.out.println("Collector put_to_queue:group="+group+";data_queue.size()"+data_queue.size());
 		if (group == null) {
 			syslog.syslog(Syslog.LOG_ERR,
 					"A packet from an unauthorized router " + router
@@ -455,12 +466,12 @@ class Collector {
 		String addr = p.getAddress().getHostAddress().trim();
 //                p.getAddress().getAddress();
 		boolean need_log = syslog.need(Syslog.LOG_INFO);
+		System.out.println("Collector-processPacket:p.addr="+addr+"p.data:"+p.getData()+";len="+len);
 
 		synchronized (data_queue) {
 			processed++;
 		}
-
-		if (need_log)
+		System.out.println("Collector-processPacket:processed="+processed);
 			syslog.syslog(Syslog.LOG_INFO, addr + "("
 					+ p.getAddress().getHostName() + ") " + len + " bytes");
 
@@ -469,7 +480,7 @@ class Collector {
 				throw new DoneException("  * too short packet *");
 
 			short version = (short) Util.to_number(buf, 0, 2);
-
+			System.out.println("Collector-processPacket: netflow version="+version);
 			if (version > MAX_VERION || version <= 0)
 				throw new DoneException("  * unsupported version *");
 
